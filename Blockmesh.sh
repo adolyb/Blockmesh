@@ -76,16 +76,18 @@ function deploy_node() {
     tar -xzf blockmesh-cli.tar.gz
     rm blockmesh-cli.tar.gz
     
+    # 使用正确的路径
+    BLOCKMESH_CLI_PATH="$BLOCKMESH_DIR/target/x86_64-unknown-linux-gnu/release/blockmesh-cli"
+    
     # 检查文件是否存在
-    if [ ! -f "blockmesh-cli" ]; then
+    if [ ! -f "$BLOCKMESH_CLI_PATH" ]; then
         echo "正在寻找 blockmesh-cli..."
         find "$BLOCKMESH_DIR" -name "blockmesh-cli" -type f
         echo "错误：找不到 blockmesh-cli 文件"
         exit 1
     fi
     
-    chmod +x blockmesh-cli
-    BLOCKMESH_CLI_PATH="$BLOCKMESH_DIR/blockmesh-cli"
+    chmod +x "$BLOCKMESH_CLI_PATH"
     
     # 获取用户输入
     read -p "请输入您的 BlockMesh 邮箱: " BLOCKMESH_EMAIL
@@ -94,6 +96,7 @@ function deploy_node() {
     
     # 运行程序
     echo "正在启动 blockmesh-cli..."
+    cd "$(dirname "$BLOCKMESH_CLI_PATH")"
     ./blockmesh-cli --email "$BLOCKMESH_EMAIL" --password "$BLOCKMESH_PASSWORD" > "$LOG_FILE" 2>&1 &
     
     echo "脚本执行完成。"
