@@ -72,34 +72,50 @@ function deploy_node() {
     echo "正在下载 blockmesh-cli..."
     wget -q "https://github.com/block-mesh/block-mesh-monorepo/releases/download/v0.0.321/blockmesh-cli-x86_64-unknown-linux-gnu.tar.gz" -O blockmesh-cli.tar.gz
     
-    echo "正在解压缩 blockmesh-cli..."
-    tar -xzf blockmesh-cli.tar.gz
-    rm blockmesh-cli.tar.gz
-    
-    # 使用正确的路径
-    BLOCKMESH_CLI_PATH="$BLOCKMESH_DIR/target/x86_64-unknown-linux-gnu/release/blockmesh-cli"
-    
-    # 检查文件是否存在
-    if [ ! -f "$BLOCKMESH_CLI_PATH" ]; then
-        echo "正在寻找 blockmesh-cli..."
-        find "$BLOCKMESH_DIR" -name "blockmesh-cli" -type f
-        echo "错误：找不到 blockmesh-cli 文件"
+    # 检查下载是否成功
+    if [ ! -f "blockmesh-cli.tar.gz" ]; then
+        echo "错误：下载失败"
         exit 1
     fi
     
-    chmod +x "$BLOCKMESH_CLI_PATH"
+    echo "正在解压缩 blockmesh-cli..."
+    tar -xzvf blockmesh-cli.tar.gz  # 添加 v 参数查看解压过程
     
-    # 获取用户输入
-    read -p "请输入您的 BlockMesh 邮箱: " BLOCKMESH_EMAIL
-    read -sp "请输入您的 BlockMesh 密码: " BLOCKMESH_PASSWORD
-    echo
+    # 检查解压后的文件
+    echo "检查解压后的文件结构："
+    ls -R
     
-    # 运行程序
-    echo "正在启动 blockmesh-cli..."
-    cd "$(dirname "$BLOCKMESH_CLI_PATH")"
-    ./blockmesh-cli --email "$BLOCKMESH_EMAIL" --password "$BLOCKMESH_PASSWORD" > "$LOG_FILE" 2>&1 &
+    # 尝试找到 blockmesh-cli
+    echo "搜索 blockmesh-cli 文件："
+    find . -name "blockmesh-cli" -type f
     
-    echo "脚本执行完成。"
+    # 如果找到文件，使用第一个匹配项
+    FOUND_CLI=$(find . -name "blockmesh-cli" -type f | head -n 1)
+    
+    if [ -n "$FOUND_CLI" ]; then
+        BLOCKMESH_CLI_PATH="$BLOCKMESH_DIR/$FOUND_CLI"
+        echo "找到 blockmesh-cli：$BLOCKMESH_CLI_PATH"
+        
+        chmod +x "$BLOCKMESH_CLI_PATH"
+        
+        # 获取用户输入
+        read -p "请输入您的 BlockMesh 邮箱: " BLOCKMESH_EMAIL
+        read -sp "请输入您的 BlockMesh 密码: " BLOCKMESH_PASSWORD
+        echo
+        
+        # 运行程序
+        echo "正在启动 blockmesh-cli..."
+        cd "$(dirname "$BLOCKMESH_CLI_PATH")"
+        ./blockmesh-cli --email "$BLOCKMESH_EMAIL" --password "$BLOCKMESH_PASSWORD" > "$LOG_FILE" 2>&1 &
+        
+        echo "脚本执行完成。"
+    else
+        echo "错误：无法找到 blockmesh-cli 文件"
+        echo "当前目录内容："
+        ls -la
+        exit 1
+    fi
+    
     read -p "按任意键返回主菜单..."
 }
 
